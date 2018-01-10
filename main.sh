@@ -113,7 +113,7 @@ for SUBJ in $SUBJECTS; do
 	WM_Mean=$(fslstats "$SUBJECTOPDIR"/Intermediate_Files/"${SUBJ}"_NormRangeWM -M);
 
 	# updating number of max lesions
-	NumLesionFiles=$(find -d "${SUBJ}"*"${LESION_MASK}"*.nii* | wc -l);
+	NumLesionFiles=$(find "$INPUTDIR"/"$SUBJ"/"${SUBJ}"*"${LESION_MASK}"*.nii* | wc -l);
 
 	if (( maxlesions < NumLesionFiles )); then
 		maxlesions=$NumLesionFiles;
@@ -178,7 +178,7 @@ for SUBJ in $SUBJECTS; do
 			COG=$(fslstats $Lesion -C);
 			COG=$( printf "%.0f\n" $COG );
 
-			fsleyes render -vl "$COG" --hideCursor -of "$WORKINGDIR"/QC_Lesions/"${SUBJ}"_Lesion"${counter}".png "$ANATOMICAL" "$INPUTDIR"/"$SUBJ"/"$Lesion" -a 40 "$SUBJECTOPDIR"/"${SUBJ}"_WMAdjusted_Lesion"${counter}"_bin -cm blue -a 50;
+			fsleyes render -vl $COG --hideCursor -of "$WORKINGDIR"/QC_Lesions/"${SUBJ}"_Lesion"${counter}".png "$ANATOMICAL" "$INPUTDIR"/"$SUBJ"/"$Lesion" -a 40 "$SUBJECTOPDIR"/"${SUBJ}"_WMAdjusted_Lesion"${counter}"_bin -cm blue -a 50;
 
 		fi
 
