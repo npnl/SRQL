@@ -140,16 +140,16 @@ for SUBJ in $SUBJECTS; do
 			fslmaths "$Lesion" -bin "$SUBJECTOPDIR"/Intermediate_Files/"${SUBJ}"_LesionMask"${counter}"_bin;
 
 		fi
-		
+
 		#calculate original and white matter adjusted lesion volumes
 		OrigLesionVol=$(fslstats "$Lesion" -V | awk '{print $2;}');
 
 		CorrLesionVol=$( wmCorrection );
 
 		#remove any voxels overlapping with CSF mask
-		fslmaths "${SUBJECTOPDIR}"/${SUBJ}_WMAdjusted_Lesion${counter}_bin.nii.gz -sub "$CSF_MASK" "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter} &>/dev/null;
+		#fslmaths "${SUBJECTOPDIR}"/${SUBJ}_WMAdjusted_Lesion${counter}_bin.nii.gz -sub "$CSF_MASK" "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter} &>/dev/null;
 
-		fslmaths "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter} -thr 1 "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter}_bin;
+		#fslmaths "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter} -thr 1 "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter}_bin;
 
 		VolRemoved=$(awk "BEGIN {printf \"%.9f\",${OrigLesionVol}-${CorrLesionVol}}");
 
@@ -159,7 +159,7 @@ for SUBJ in $SUBJECTS; do
 		#this gets the center of gravity of the lesion using the mni coord and then extracts the first char of the X coordinate
 		LesionCOG=$(fslstats ${Lesion} -c | awk '{print substr($0,0,1)}');
 
-		if [ $LesionCOG == '-' ]; then
+		if [ "$LesionCOG" == '-' ]; then
 			LesionSide='L';
 		else
 			LesionSide='R';
@@ -178,7 +178,7 @@ for SUBJ in $SUBJECTS; do
 			COG=$(fslstats $Lesion -C);
 			COG=$( printf "%.0f\n" $COG );
 
-			fsleyes render -vl $COG --hideCursor -of "$WORKINGDIR"/QC_Lesions/"${SUBJ}"_Lesion"${counter}".png "$ANATOMICAL" "$INPUTDIR"/"$SUBJ"/"$Lesion" -a 40 "$SUBJECTOPDIR"/"${SUBJ}"_WMAdjusted_Lesion"${counter}"_bin -cm blue -a 50;
+			fsleyes render -vl "$COG" --hideCursor -of "$WORKINGDIR"/QC_Lesions/"${SUBJ}"_Lesion"${counter}".png "$ANATOMICAL" "$INPUTDIR"/"$SUBJ"/"$Lesion" -a 40 "$SUBJECTOPDIR"/"${SUBJ}"_WMAdjusted_Lesion"${counter}"_bin -cm blue -a 50;
 
 		fi
 
