@@ -88,14 +88,17 @@ for SUBJ in $SUBJECTS; do
 		WM_MASK=$(ls ./*"${WM_ID}"*.nii*);
 	fi
 
-	fslmaths "${SUBJ}"*"${LESION_MASK}".nii* -bin "$SUBJECTOPDIR"/Intermediate_Files/"${SUBJ}"_LesionMask1_bin &>/dev/null;
-
+	if $(fslmaths "${SUBJ}"*"${LESION_MASK}".nii* -bin "$SUBJECTOPDIR"/Intermediate_Files/"${SUBJ}"_LesionMask1_bin &>/dev/null); then
+		:
+	else
+		echo "${SUBJ}*${LESION_MASK}.nii* was not binarized";
+		continue;
+	fi
 
 	if $(fslmaths "${WM_MASK}" -sub "${SUBJECTOPDIR}"/Intermediate_Files/"${SUBJ}"_LesionMask1_bin.nii.gz "${SUBJECTOPDIR}"/Intermediate_Files/"${SUBJ}"_corrWM &>/dev/null); then
 		:
 	else
-		echo "
-			Check Image Orientations for T1 and Lesion Mask. Skipping Subject: ${SUBJ}.";
+		echo "Check Image Orientations for T1 and Lesion Mask. Skipping Subject: ${SUBJ}.";
 		printf "${SUBJ} Skipped" >> "$WORKINGDIR"/lesion_data.csv;
 		printf '\n' >> "$WORKINGDIR"/lesion_data.csv;
 		cd "$INPUTDIR" || exit;
@@ -146,10 +149,13 @@ for SUBJ in $SUBJECTS; do
 
 		CorrLesionVol=$( wmCorrection );
 
+		####################################
 		#remove any voxels overlapping with CSF mask
-		#fslmaths "${SUBJECTOPDIR}"/${SUBJ}_WMAdjusted_Lesion${counter}_bin.nii.gz -sub "$CSF_MASK" "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter} &>/dev/null;
+		fslmaths "${SUBJECTOPDIR}"/${SUBJ}_WMAdjusted_Lesion${counter}_bin.nii.gz -sub "$CSF_MASK" "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter} &>/dev/null;
 
-		#fslmaths "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter} -thr 1 "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter}_bin;
+		fslmaths "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter} -thr 1 "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter}_bin;
+		#################################3
+
 
 		VolRemoved=$(awk "BEGIN {printf \"%.9f\",${OrigLesionVol}-${CorrLesionVol}}");
 
@@ -186,7 +192,7 @@ for SUBJ in $SUBJECTS; do
 
 	done
 
-	printf '%s,' ${SubjInfoArray[@]} >> "$WORKINGDIR"/lesion_data.csv;
+	printf '%s,' "${SubjInfoArray[@]}" >> "$WORKINGDIR"/lesion_data.csv;
 	printf '\n' >> "$WORKINGDIR"/lesion_data.csv;
 
 	cd "$INPUTDIR" || exit;
