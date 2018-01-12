@@ -82,16 +82,29 @@ for SUBJ in $SUBJECTS; do
 		WM_MASK="${SUBJECTOPDIR}"/Intermediate_Files/"${SUBJ}"_seg_2.nii.gz;
 		CSF_MASK="${SUBJECTOPDIR}"/Intermediate_Files/"${SUBJ}"_seg_0.nii.gz;
 		fsleyes render --hideCursor -of "$WORKINGDIR"/QC_WM/"${SUBJ}"_WM.png "$ANATOMICAL" "$WM_MASK" -cm blue -a 50;
+		fsleyes render --hideCursor -of "$WORKINGDIR"/QC_CSF/"${SUBJ}"_CSF.png "$ANATOMICAL" "$CSF_MASK" -cm green -a 50;
 
 	else
 
 		WM_MASK=$(ls ./*"${WM_ID}"*.nii*);
 	fi
 
-	if $(fslmaths "${SUBJ}"*"${LESION_MASK}".nii* -bin "$SUBJECTOPDIR"/Intermediate_Files/"${SUBJ}"_LesionMask1_bin &>/dev/null); then
+	# updating number of max lesions
+	NumLesionFiles=$(find "$INPUTDIR"/"$SUBJ"/"${SUBJ}"*"${LESION_MASK}"*.nii* | wc -l);
+
+	if (( maxlesions < NumLesionFiles )); then
+		maxlesions=$NumLesionFiles;
+
+		echo "updated num of max lesions: " "$maxlesions";
+	fi
+  LesionFiles=$(ls -d "${SUBJ}"*"${LESION_MASK}"*.nii*);
+	read LesionMask1 ___ <<< "$LesionFiles";
+
+
+	if $(fslmaths "$LesionMask1" -bin "$SUBJECTOPDIR"/Intermediate_Files/"${SUBJ}"_LesionMask1_bin &>/dev/null); then
 		:
 	else
-		echo "${SUBJ}*${LESION_MASK}.nii* was not binarized";
+		echo "$LesionMask1 was not binarized";
 		continue;
 	fi
 
@@ -114,17 +127,6 @@ for SUBJ in $SUBJECTS; do
 	fslmaths "$SUBJECTOPDIR"/Intermediate_Files/"${SUBJ}"_"${ANATOMICAL_ID}"_int_scaled -mul "${corrWM}" "$SUBJECTOPDIR"/Intermediate_Files/"${SUBJ}"_NormRangeWM;
 
 	WM_Mean=$(fslstats "$SUBJECTOPDIR"/Intermediate_Files/"${SUBJ}"_NormRangeWM -M);
-
-	# updating number of max lesions
-	NumLesionFiles=$(find "$INPUTDIR"/"$SUBJ"/"${SUBJ}"*"${LESION_MASK}"*.nii* | wc -l);
-
-	if (( maxlesions < NumLesionFiles )); then
-		maxlesions=$NumLesionFiles;
-
-		echo "updated num of max lesions: " "$maxlesions";
-	fi
-
-	LesionFiles=$(ls -d "${SUBJ}"*"${LESION_MASK}"*.nii*);
 
 	counter=1;
 
@@ -149,12 +151,12 @@ for SUBJ in $SUBJECTS; do
 
 		CorrLesionVol=$( wmCorrection );
 
-		####################################
+		############################################################################
 		#remove any voxels overlapping with CSF mask
-		fslmaths "${SUBJECTOPDIR}"/${SUBJ}_WMAdjusted_Lesion${counter}_bin.nii.gz -sub "$CSF_MASK" "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter} &>/dev/null;
+		fslmaths "${SUBJECTOPDIR}"/${SUBJ}_WMAdjusted_Lesion${counter}_bin.nii.gz -sub "$CSF_MASK" "${SUBJECTOPDIR}"/Intermediate_Files/${SUBJ}_CSFAdjusted_Lesion${counter} &>/dev/null;
 
-		fslmaths "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter} -thr 1 "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter}_bin;
-		#################################3
+		fslmaths "${SUBJECTOPDIR}"/Intermediate_Files/${SUBJ}_CSFAdjusted_Lesion${counter} -thr 1 "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter}_bin;
+		############################################################################
 
 
 		VolRemoved=$(awk "BEGIN {printf \"%.9f\",${OrigLesionVol}-${CorrLesionVol}}");
@@ -185,6 +187,7 @@ for SUBJ in $SUBJECTS; do
 			COG=$( printf "%.0f\n" $COG );
 
 			fsleyes render -vl $COG --hideCursor -of "$WORKINGDIR"/QC_Lesions/"${SUBJ}"_Lesion"${counter}".png "$ANATOMICAL" "$INPUTDIR"/"$SUBJ"/"$Lesion" -a 40 "$SUBJECTOPDIR"/"${SUBJ}"_WMAdjusted_Lesion"${counter}"_bin -cm blue -a 50;
+			fsleyes render -vl $COG --hideCursor -of "$WORKINGDIR"/QC_Lesions_CSF/"${SUBJ}"_Lesion"${counter}".png "$ANATOMICAL" "$INPUTDIR"/"$SUBJ"/"$Lesion" -a 40 "$SUBJECTOPDIR"/"${SUBJ}"_WMAdjusted_Lesion"${counter}"_bin -cm blue -a 50 "$SUBJECTOPDIR"/"${SUBJ}"_CSFAdjusted_Lesion"${counter}"_bin -cm yellow -a 50;
 
 		fi
 
@@ -236,6 +239,12 @@ if [ "$RunWM" == 1 ]; then
 	makeQCPage WM;
 fi
 
+##organize later
+cd "$WORKINGDIR"/QC_CSF || exit;
+makeQCPage CSF;
+
+cd "$WORKINGDIR"/QC_Lesions_CSF || exit;
+makeQCPage CSF_Lesions;
 
 
 ####################################[ END OF SCRIPT ]#####################################

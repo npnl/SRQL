@@ -6,16 +6,16 @@ function setup {
 echo "    SRQL (circle) Toolbox 2.0 Copyright (C) 2017  Kaori L Ito & Sook-Lei Liew
 
     This program comes with ABSOLUTELY NO WARRANTY.
-    This is free software, and you are welcome to redistribute it under certain conditions; 
+    This is free software, and you are welcome to redistribute it under certain conditions;
     please visit <https://www.gnu.org/licenses/gpl.html> for details.
-  
+
     "
 
-#Identify location of input directory. 
+#Identify location of input directory.
 echo "Specify the location of your input directory. (e.g., /Users/Lily/ProjectX/Input_Data)";
 read INPUTDIR;
 
-#Identify location of output directory. 
+#Identify location of output directory.
 echo "
 Specify the location of your desired output directory. (e.g., /Users/Lily/ProjectX/Outputs)";
 read WORKINGDIR;
@@ -31,14 +31,14 @@ read LESION_MASK;
 echo "Have you performed skull stripping on your anatomical images? ('y'/'n')"
 read -r BET_STATUS;
 
-	if [ "${BET_STATUS}" == 'y' ] || [ "${BET_STATUS}" == 'yes' ]; then 
-		RunBET=0; 
+	if [ "${BET_STATUS}" == 'y' ] || [ "${BET_STATUS}" == 'yes' ]; then
+		RunBET=0;
 		echo "Please specify skull stripped brain identifier (e.g., brain)";
 		read -r BET_ID;
-		
+
 	elif [ "${BET_STATUS}" == 'n' ] || [ "${BET_STATUS}" == 'no' ]; then
-		RunBET=1;	
-		
+		RunBET=1;
+
 	else
 		echo "Cannot process response. Exiting script." || exit;
 	fi
@@ -46,24 +46,24 @@ read -r BET_STATUS;
 echo "Have you performed white matter segmentation on your subjects? ('y'/'n')";
 read -r WM_STATUS;
 
-	if [ "${WM_STATUS}" == 'y' ] || [ "${WM_STATUS}" == 'yes' ]; then 
+	if [ "${WM_STATUS}" == 'y' ] || [ "${WM_STATUS}" == 'yes' ]; then
 		echo "Please specify identifier for white matter mask (e.g., c1)";
 		read -r WM_ID;
 		RunWM=0;
-		
-	elif [ "${WM_STATUS}" == 'n' ] || [ "${WM_STATUS}" == 'no' ]; then 
+
+	elif [ "${WM_STATUS}" == 'n' ] || [ "${WM_STATUS}" == 'no' ]; then
 		RunWM=1;
-		
+
 		if [ "$RunBET" == 1 ]; then
 			echo "SRQL will run brain extraction and white matter segmentation";
 		fi
-		
+
 	else
 		echo "Cannot process response. Exiting script." || exit;
 	fi
 
 echo "
-Indicate the percentage of intensity values you would like to have removed from your mask. 
+Indicate the percentage of intensity values you would like to have removed from your mask.
 	 Note: 0% indicates no white matter correction will be made (default: 5%)";
 read -r RMPERCENT_INTENSITY;
 
@@ -81,8 +81,8 @@ echo "
 Create a quality control page? ('y'/'n')
 	Note: This requires pre-installation of fsleyes";
 read -r QC_STATUS;
-	
-	if [ "${QC_STATUS}" == 'y' ] || [ "${QC_STATUS}" == 'yes' ]; then 
+
+	if [ "${QC_STATUS}" == 'y' ] || [ "${QC_STATUS}" == 'yes' ]; then
 		RunQC=1;
 	elif [ "${QC_STATUS}" == 'n' ] || [ "${QC_STATUS}" == 'no' ]; then
 		RunQC=0;
@@ -103,6 +103,7 @@ cd $WORKINGDIR || exit;
 
 if [ "$RunQC" == 1 ]; then
 	mkdir QC_Lesions;
+  mkdir QC_Lesions_CSF;
 fi
 
 if [ "$RunBET" == 1 ]; then
@@ -111,6 +112,7 @@ fi
 
 if [ "$RunWM" == 1 ]; then
 	mkdir QC_WM;
+  mkdir QC_CSF;
 fi
 
 
