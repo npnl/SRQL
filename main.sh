@@ -54,7 +54,7 @@ pwd;
 maxlesions=1;
 
 for SUBJ in $SUBJECTS; do
-
+	echo "current subject: " $SUBJ;
 	cd "$SUBJ" || exit;
 
 	ANATOMICAL=$(ls "${SUBJ}"*"${ANATOMICAL_ID}".nii*);
