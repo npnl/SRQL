@@ -6,7 +6,7 @@ function wmCorrection {
 
 		LOWER=$(echo "${WM_Mean} - ${VoxelRange}" | bc -l);
  		UPPER=$(echo "${WM_Mean} + ${VoxelRange}" | bc -l);
-		
+
 		# multiply Lesion mask by normalized T1 intensity
 		 if $(fslmaths $SUBJECTOPDIR/Intermediate_Files/${SUBJ}_${ANATOMICAL_ID}_int_scaled -mul $SUBJECTOPDIR/Intermediate_Files/${SUBJ}_LesionMask${counter}_bin $SUBJECTOPDIR/Intermediate_Files/${SUBJ}_Lesion${counter}_NormRange) ; then
 

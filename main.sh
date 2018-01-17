@@ -36,13 +36,6 @@ source "$DIR"/intnormalizeT1.sh;
 
 ####################################[ SCRIPT BEGINS ]#####################################
 
-# INPUTDIR=/Users/lilyito/Documents/Projects/SRQL/TEST_INPUT;
-# WORKINGDIR=/Users/lilyito/Documents/Projects/SRQL/TEST_OUTPUT;
-# ANATOMICAL_ID=T1;
-# LesionMask='LesionSmooth';
-# RunWM=0;
-
-
 ####################################[ MAIN SCRIPT ]#######################################
 
 setup;
@@ -80,9 +73,8 @@ for SUBJ in $SUBJECTS; do
 		# perform WM segmentation
 		fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 -g --nopve -o "${SUBJECTOPDIR}"/Intermediate_Files/"${SUBJ}" "${BET_Brain}";
 		WM_MASK="${SUBJECTOPDIR}"/Intermediate_Files/"${SUBJ}"_seg_2.nii.gz;
-		CSF_MASK="${SUBJECTOPDIR}"/Intermediate_Files/"${SUBJ}"_seg_0.nii.gz;
 		fsleyes render --hideCursor -of "$WORKINGDIR"/QC_WM/"${SUBJ}"_WM.png "$ANATOMICAL" "$WM_MASK" -cm blue -a 50;
-		fsleyes render --hideCursor -of "$WORKINGDIR"/QC_CSF/"${SUBJ}"_CSF.png "$ANATOMICAL" "$CSF_MASK" -cm green -a 50;
+
 
 	else
 
@@ -151,14 +143,6 @@ for SUBJ in $SUBJECTS; do
 
 		CorrLesionVol=$( wmCorrection );
 
-		############################################################################
-		#remove any voxels overlapping with CSF mask
-		fslmaths "${SUBJECTOPDIR}"/${SUBJ}_WMAdjusted_Lesion${counter}_bin.nii.gz -sub "$CSF_MASK" "${SUBJECTOPDIR}"/Intermediate_Files/${SUBJ}_CSFAdjusted_Lesion${counter} &>/dev/null;
-
-		fslmaths "${SUBJECTOPDIR}"/Intermediate_Files/${SUBJ}_CSFAdjusted_Lesion${counter} -thr 1 "${SUBJECTOPDIR}"/${SUBJ}_CSFAdjusted_Lesion${counter}_bin;
-		############################################################################
-
-
 		VolRemoved=$(awk "BEGIN {printf \"%.9f\",${OrigLesionVol}-${CorrLesionVol}}");
 
 		PercentRemoved=$(awk "BEGIN {printf \"%.9f\",${VolRemoved}/${TotalNativeBrainVol}}");
@@ -187,7 +171,6 @@ for SUBJ in $SUBJECTS; do
 			COG=$( printf "%.0f\n" $COG );
 
 			fsleyes render -vl $COG --hideCursor -of "$WORKINGDIR"/QC_Lesions/"${SUBJ}"_Lesion"${counter}".png "$ANATOMICAL" "$INPUTDIR"/"$SUBJ"/"$Lesion" -a 40 "$SUBJECTOPDIR"/"${SUBJ}"_WMAdjusted_Lesion"${counter}"_bin -cm blue -a 50;
-			fsleyes render -vl $COG --hideCursor -of "$WORKINGDIR"/QC_Lesions_CSF/"${SUBJ}"_Lesion"${counter}".png "$ANATOMICAL" "$INPUTDIR"/"$SUBJ"/"$Lesion" -a 40 "$SUBJECTOPDIR"/"${SUBJ}"_WMAdjusted_Lesion"${counter}"_bin -cm blue -a 50 "$SUBJECTOPDIR"/"${SUBJ}"_CSFAdjusted_Lesion"${counter}"_bin -cm yellow -a 50;
 
 		fi
 
@@ -239,12 +222,6 @@ if [ "$RunWM" == 1 ]; then
 	makeQCPage WM;
 fi
 
-##organize later
-cd "$WORKINGDIR"/QC_CSF || exit;
-makeQCPage CSF;
-
-cd "$WORKINGDIR"/QC_Lesions_CSF || exit;
-makeQCPage CSF_Lesions;
 
 
 ####################################[ END OF SCRIPT ]#####################################

@@ -103,7 +103,6 @@ cd $WORKINGDIR || exit;
 
 if [ "$RunQC" == 1 ]; then
 	mkdir QC_Lesions;
-  mkdir QC_Lesions_CSF;
 fi
 
 if [ "$RunBET" == 1 ]; then
@@ -112,7 +111,7 @@ fi
 
 if [ "$RunWM" == 1 ]; then
 	mkdir QC_WM;
-  mkdir QC_CSF;
+
 fi
 
 
